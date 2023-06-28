@@ -64,6 +64,7 @@ func RegisterCallback(callback *C.CGO_OpenIM_Listener, port C.Dart_Port_DL) {
 	workMomentsListener := &WorkMomentsListener{}
 	open_im_sdk.SetWorkMomentsListener(workMomentsListener)
 }
+
 func callBack(methodName string, operationID interface{}, errCode interface{}, message interface{}) {
 	cMethodName := C.CString(methodName)
 	defer C.free(unsafe.Pointer(cMethodName))
