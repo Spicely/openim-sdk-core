@@ -2,7 +2,6 @@ package main
 
 /*
 #include <stdio.h>
-#include <stdlib.h>
 #include "include/dart_api_dl.h"
 
 typedef struct {
@@ -67,17 +66,14 @@ func RegisterCallback(callback *C.CGO_OpenIM_Listener, port C.Dart_Port_DL) {
 
 func callBack(methodName string, operationID interface{}, callMethodName interface{}, errCode interface{}, message interface{}) {
 	cMethodName := C.CString(methodName)
-	defer C.free(unsafe.Pointer(cMethodName))
 
 	var cOperationID *C.char
 	if operationID != nil {
 		cOperationID = C.CString(operationID.(string))
-		defer C.free(unsafe.Pointer(cOperationID))
 	}
 	var cCallMethodName *C.char
 	if callMethodName != nil {
 		cCallMethodName = C.CString(callMethodName.(string))
-		defer C.free(unsafe.Pointer(cCallMethodName))
 	}
 
 	var cErrCode *C.int32_t
@@ -88,7 +84,6 @@ func callBack(methodName string, operationID interface{}, callMethodName interfa
 	var cMessage *C.char
 	if message != nil {
 		cMessage = C.CString(message.(string))
-		defer C.free(unsafe.Pointer(cMessage))
 	}
 
 	C.callOnMethodChannel(openIMListener, main_isolate_send_port, cMethodName, cOperationID, cCallMethodName, cErrCode, cMessage)
@@ -123,7 +118,7 @@ func (c *OnConnListener) OnConnectSuccess() {
 }
 
 func (c *OnConnListener) OnConnectFailed(errCode int32, errMsg string) {
-	callBack("OnConnectFailed", nil, errCode, nil, errMsg)
+	callBack("OnConnectFailed", nil, nil, errCode, errMsg)
 }
 
 func (c *OnConnListener) OnKickedOffline() {
