@@ -9,7 +9,7 @@ typedef struct {
     void (*onMethodChannel)(Dart_Port_DL port, const char*, const char*, const char*, int32_t*, const char*);
 } CGO_OpenIM_Listener;
 
-static void callOnMethodChannel(CGO_OpenIM_Listener *listener, Dart_Port_DL port, const char* methodName, const char* operationID,char* callMethodName, int32_t* errCode, const char* message) {
+static void callOnMethodChannel(CGO_OpenIM_Listener *listener, Dart_Port_DL port, const char* methodName, const char* operationID,const char* callMethodName, int32_t* errCode, const char* message) {
     listener->onMethodChannel(port, methodName, operationID, callMethodName, errCode, message);
 }
 */
@@ -75,8 +75,8 @@ func callBack(methodName string, operationID interface{}, callMethodName interfa
 		defer C.free(unsafe.Pointer(cOperationID))
 	}
 	var cCallMethodName *C.char
-	if message != nil {
-		cCallMethodName = C.CString(message.(string))
+	if callMethodName != nil {
+		cCallMethodName = C.CString(callMethodName.(string))
 		defer C.free(unsafe.Pointer(cCallMethodName))
 	}
 
