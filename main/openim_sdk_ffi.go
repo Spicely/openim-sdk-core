@@ -135,7 +135,7 @@ type BaseListener struct {
 }
 
 func (b BaseListener) OnError(errCode int32, errMsg string) {
-	callBack("OnError", b.operationID, nil, errCode, errMsg)
+	callBack("OnError", b.operationID, b.methodName, errCode, errMsg)
 }
 
 func (b BaseListener) OnSuccess(data string) {
@@ -143,13 +143,21 @@ func (b BaseListener) OnSuccess(data string) {
 }
 
 type SendMsgCallBackListener struct {
-	BaseListener
 	operationID string
 	methodName  string
+	clientMsgID string
 }
 
 func (c SendMsgCallBackListener) OnProgress(progress int) {
-	callBack("OnProgress", c.operationID, c.methodName, progress, nil)
+	callBack("OnProgress", c.operationID, c.methodName, progress, c.clientMsgID)
+}
+
+func (c SendMsgCallBackListener) OnError(errCode int32, errMsg string) {
+	callBack("OnError", c.operationID, c.methodName, errCode, errMsg)
+}
+
+func (c SendMsgCallBackListener) OnSuccess(data string) {
+	callBack("OnSuccess", c.operationID, c.methodName, nil, data)
 }
 
 type UserListener struct{}
@@ -1180,21 +1188,23 @@ func CreateForwardMessage(operationID *C.char, message *C.char) *C.char {
 }
 
 //export SendMessage
-func SendMessage(operationID *C.char, message *C.char, recvID, groupID *C.char, offlinePushInfo *C.char) {
+func SendMessage(operationID *C.char, message *C.char, recvID, groupID *C.char, offlinePushInfo *C.char, clientMsgID *C.char) {
 	id := C.GoString(operationID)
 	callBack := &SendMsgCallBackListener{
 		operationID: id,
 		methodName:  "SendMessage",
+		clientMsgID: C.GoString(clientMsgID),
 	}
 	open_im_sdk.SendMessage(callBack, id, C.GoString(message), C.GoString(recvID), C.GoString(groupID), C.GoString(offlinePushInfo))
 }
 
 //export SendMessageNotOss
-func SendMessageNotOss(operationID *C.char, message *C.char, recvID, groupID *C.char, offlinePushInfo *C.char) {
+func SendMessageNotOss(operationID *C.char, message *C.char, recvID, groupID *C.char, offlinePushInfo *C.char, clientMsgID *C.char) {
 	id := C.GoString(operationID)
 	callBack := &SendMsgCallBackListener{
 		operationID: id,
 		methodName:  "SendMessageNotOss",
+		clientMsgID: C.GoString(clientMsgID),
 	}
 	open_im_sdk.SendMessageNotOss(callBack, id, C.GoString(message), C.GoString(recvID), C.GoString(groupID), C.GoString(offlinePushInfo))
 }
