@@ -5,17 +5,16 @@ package main
 #include "include/dart_api_dl.h"
 
 typedef struct {
-    void (*onMethodChannel)(Dart_Port_DL port, const char*, const char*, const char*, int32_t*, const char*);
+    void (*onMethodChannel)(Dart_Port_DL port, const char*, const char*, const char*, double*, const char*);
 } CGO_OpenIM_Listener;
 
-static void callOnMethodChannel(CGO_OpenIM_Listener *listener, Dart_Port_DL port, const char* methodName, const char* operationID,const char* callMethodName, int32_t* errCode, const char* message) {
+static void callOnMethodChannel(CGO_OpenIM_Listener *listener, Dart_Port_DL port, const char* methodName, const char* operationID,const char* callMethodName, double* errCode, const char* message) {
     listener->onMethodChannel(port, methodName, operationID, callMethodName, errCode, message);
 }
 */
 import "C"
 import (
 	"open_im_sdk/open_im_sdk"
-	"unsafe"
 )
 
 var openIMListener *C.CGO_OpenIM_Listener
@@ -76,9 +75,15 @@ func callBack(methodName string, operationID interface{}, callMethodName interfa
 		cCallMethodName = C.CString(callMethodName.(string))
 	}
 
-	var cErrCode *C.int32_t
+	var cErrCode *C.double
 	if errCode != nil {
-		cErrCode = (*C.int32_t)(unsafe.Pointer(&errCode))
+		if methodName == "OnProgress" {
+			cErrCode = (*C.double)(C.malloc(C.sizeof_double))
+			*cErrCode = C.double(errCode.(int))
+		} else {
+			cErrCode = (*C.double)(C.malloc(C.sizeof_double))
+			*cErrCode = C.double(errCode.(int32))
+		}
 	}
 
 	var cMessage *C.char
@@ -504,13 +509,13 @@ func CreateGroup(operationID *C.char, groupBaseInfo *C.char, memberList *C.char)
 }
 
 //export JoinGroup
-func JoinGroup(operationID *C.char, groupID *C.char, reqMsg *C.char, joinSource *C.int32_t) {
+func JoinGroup(operationID *C.char, groupID *C.char, reqMsg *C.char, joinSource C.int32_t) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "JoinGroup",
 	}
-	open_im_sdk.JoinGroup(callBack, id, C.GoString(groupID), C.GoString(reqMsg), int32(*joinSource))
+	open_im_sdk.JoinGroup(callBack, id, C.GoString(groupID), C.GoString(reqMsg), int32(joinSource))
 }
 
 //export QuitGroup
@@ -664,13 +669,13 @@ func GetGroupMemberOwnerAndAdmin(operationID *C.char, groupID *C.char) {
 }
 
 //export GetGroupMemberListByJoinTimeFilter
-func GetGroupMemberListByJoinTimeFilter(operationID *C.char, groupID *C.char, offset C.int32_t, count C.int32_t, joinTimeBegin C.int64_t, joinTimeEnd C.int64_t, filterUserIDList string) {
+func GetGroupMemberListByJoinTimeFilter(operationID *C.char, groupID *C.char, offset C.int32_t, count C.int32_t, joinTimeBegin C.int64_t, joinTimeEnd C.int64_t, filterUserIDList *C.char) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "GetGroupMemberListByJoinTimeFilter",
 	}
-	open_im_sdk.GetGroupMemberListByJoinTimeFilter(callBack, id, C.GoString(groupID), int32(offset), int32(count), int64(joinTimeBegin), int64(joinTimeEnd), filterUserIDList)
+	open_im_sdk.GetGroupMemberListByJoinTimeFilter(callBack, id, C.GoString(groupID), int32(offset), int32(count), int64(joinTimeBegin), int64(joinTimeEnd), C.GoString(filterUserIDList))
 }
 
 //export GetGroupMembersInfo
@@ -721,6 +726,16 @@ func GetRecvGroupApplicationList(operationID *C.char) {
 		methodName:  "GetRecvGroupApplicationList",
 	}
 	open_im_sdk.GetRecvGroupApplicationList(callBack, id)
+}
+
+//export GetSendGroupApplicationList
+func GetSendGroupApplicationList(operationID *C.char) {
+	id := C.GoString(operationID)
+	callBack := &BaseListener{
+		operationID: id,
+		methodName:  "GetSendGroupApplicationList",
+	}
+	open_im_sdk.GetSendGroupApplicationList(callBack, id)
 }
 
 //export AcceptGroupApplication
@@ -875,7 +890,7 @@ func RefuseFriendApplication(operationID *C.char, userIDHandleMsg *C.char) {
 	open_im_sdk.RefuseFriendApplication(callBack, id, C.GoString(userIDHandleMsg))
 }
 
-// export AddBlack
+//export AddBlack
 func AddBlack(operationID *C.char, blackUserID *C.char) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
@@ -885,7 +900,7 @@ func AddBlack(operationID *C.char, blackUserID *C.char) {
 	open_im_sdk.AddBlack(callBack, id, C.GoString(blackUserID))
 }
 
-// export GetBlackList
+//export GetBlackList
 func GetBlackList(operationID *C.char) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
@@ -895,7 +910,7 @@ func GetBlackList(operationID *C.char) {
 	open_im_sdk.GetBlackList(callBack, id)
 }
 
-// export RemoveBlack
+//export RemoveBlack
 func RemoveBlack(operationID *C.char, removeUserID *C.char) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
@@ -918,23 +933,23 @@ func GetAllConversationList(operationID *C.char) {
 }
 
 //export GetConversationListSplit
-func GetConversationListSplit(operationID *C.char, offset *C.int32_t, count *C.int32_t) {
+func GetConversationListSplit(operationID *C.char, offset C.int32_t, count C.int32_t) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "GetConversationListSplit",
 	}
-	open_im_sdk.GetConversationListSplit(callBack, id, int(*offset), int(*count))
+	open_im_sdk.GetConversationListSplit(callBack, id, int(offset), int(count))
 }
 
 //export GetOneConversation
-func GetOneConversation(operationID *C.char, sessionType *C.int, sourceID *C.char) {
+func GetOneConversation(operationID *C.char, sessionType C.int, sourceID *C.char) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "GetOneConversation",
 	}
-	open_im_sdk.GetOneConversation(callBack, id, int(*sessionType), C.GoString(sourceID))
+	open_im_sdk.GetOneConversation(callBack, id, int(sessionType), C.GoString(sourceID))
 }
 
 //export GetMultipleConversation
@@ -968,33 +983,33 @@ func SetOneConversationBurnDuration(operationID *C.char, conversationID *C.char,
 }
 
 //export SetOneConversationRecvMessageOpt
-func SetOneConversationRecvMessageOpt(operationID *C.char, conversationID *C.char, opt *C.int) {
+func SetOneConversationRecvMessageOpt(operationID *C.char, conversationID *C.char, opt C.int) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "SetOneConversationRecvMessageOpt",
 	}
-	open_im_sdk.SetOneConversationRecvMessageOpt(callBack, id, C.GoString(conversationID), int(*opt))
+	open_im_sdk.SetOneConversationRecvMessageOpt(callBack, id, C.GoString(conversationID), int(opt))
 }
 
 //export SetConversationRecvMessageOpt
-func SetConversationRecvMessageOpt(operationID *C.char, conversationIDList *C.char, opt *C.int) {
+func SetConversationRecvMessageOpt(operationID *C.char, conversationIDList *C.char, opt C.int) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "SetConversationRecvMessageOpt",
 	}
-	open_im_sdk.SetConversationRecvMessageOpt(callBack, id, C.GoString(conversationIDList), int(*opt))
+	open_im_sdk.SetConversationRecvMessageOpt(callBack, id, C.GoString(conversationIDList), int(opt))
 }
 
 //export SetGlobalRecvMessageOpt
-func SetGlobalRecvMessageOpt(operationID *C.char, opt *C.int) {
+func SetGlobalRecvMessageOpt(operationID *C.char, opt C.int) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "SetGlobalRecvMessageOpt",
 	}
-	open_im_sdk.SetGlobalRecvMessageOpt(callBack, id, int(*opt))
+	open_im_sdk.SetGlobalRecvMessageOpt(callBack, id, int(opt))
 }
 
 //export HideConversation
@@ -1058,13 +1073,13 @@ func ResetConversationGroupAtType(operationID *C.char, conversationID *C.char) {
 }
 
 //export PinConversation
-func PinConversation(operationID *C.char, conversationID *C.char, isPinned *C.bool) {
+func PinConversation(operationID *C.char, conversationID *C.char, isPinned C.bool) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "PinConversation",
 	}
-	open_im_sdk.PinConversation(callBack, id, C.GoString(conversationID), bool(*isPinned))
+	open_im_sdk.PinConversation(callBack, id, C.GoString(conversationID), bool(isPinned))
 }
 
 //export GetTotalUnreadMsgCount
@@ -1087,9 +1102,14 @@ func CreateTextMessage(operationID *C.char, text *C.char) *C.char {
 	return C.CString(open_im_sdk.CreateTextMessage(C.GoString(operationID), C.GoString(text)))
 }
 
+//export CreateTextAtMessage
+func CreateTextAtMessage(operationID *C.char, text *C.char, atUserList *C.char, atUsersInfo *C.char, message *C.char) *C.char {
+	return C.CString(open_im_sdk.CreateTextAtMessage(C.GoString(operationID), C.GoString(text), C.GoString(atUserList), C.GoString(atUsersInfo), C.GoString(message)))
+}
+
 //export CreateLocationMessage
-func CreateLocationMessage(operationID *C.char, description *C.char, longitude *C.double, latitude *C.double) *C.char {
-	return C.CString(open_im_sdk.CreateLocationMessage(C.GoString(operationID), C.GoString(description), float64(*longitude), float64(*latitude)))
+func CreateLocationMessage(operationID *C.char, description *C.char, longitude C.double, latitude C.double) *C.char {
+	return C.CString(open_im_sdk.CreateLocationMessage(C.GoString(operationID), C.GoString(description), float64(longitude), float64(latitude)))
 }
 
 //export CreateCustomMessage
@@ -1113,8 +1133,8 @@ func CreateCardMessage(operationID *C.char, cardInfo *C.char) *C.char {
 }
 
 //export CreateVideoMessageFromFullPath
-func CreateVideoMessageFromFullPath(operationID *C.char, videoFullPath *C.char, videoType *C.char, duration *C.int64_t, snapshotFullPath *C.char) *C.char {
-	return C.CString(open_im_sdk.CreateVideoMessageFromFullPath(C.GoString(operationID), C.GoString(videoFullPath), C.GoString(videoType), int64(*duration), C.GoString(snapshotFullPath)))
+func CreateVideoMessageFromFullPath(operationID *C.char, videoFullPath *C.char, videoType *C.char, duration C.int64_t, snapshotFullPath *C.char) *C.char {
+	return C.CString(open_im_sdk.CreateVideoMessageFromFullPath(C.GoString(operationID), C.GoString(videoFullPath), C.GoString(videoType), int64(duration), C.GoString(snapshotFullPath)))
 }
 
 //export CreateImageMessageFromFullPath
@@ -1123,8 +1143,8 @@ func CreateImageMessageFromFullPath(operationID *C.char, imageFullPath *C.char) 
 }
 
 //export CreateSoundMessageFromFullPath
-func CreateSoundMessageFromFullPath(operationID *C.char, soundPath *C.char, duration *C.int64_t) *C.char {
-	return C.CString(open_im_sdk.CreateSoundMessageFromFullPath(C.GoString(operationID), C.GoString(soundPath), int64(*duration)))
+func CreateSoundMessageFromFullPath(operationID *C.char, soundPath *C.char, duration C.int64_t) *C.char {
+	return C.CString(open_im_sdk.CreateSoundMessageFromFullPath(C.GoString(operationID), C.GoString(soundPath), int64(duration)))
 }
 
 //export CreateFileMessageFromFullPath
@@ -1148,8 +1168,8 @@ func CreateSoundMessageByURL(operationID *C.char, soundBaseInfo *C.char) *C.char
 }
 
 //export CreateSoundMessage
-func CreateSoundMessage(operationID *C.char, soundPath *C.char, duration *C.int64_t) *C.char {
-	return C.CString(open_im_sdk.CreateSoundMessage(C.GoString(operationID), C.GoString(soundPath), int64(*duration)))
+func CreateSoundMessage(operationID *C.char, soundPath *C.char, duration C.int64_t) *C.char {
+	return C.CString(open_im_sdk.CreateSoundMessage(C.GoString(operationID), C.GoString(soundPath), int64(duration)))
 }
 
 //export CreateVideoMessageByURL
@@ -1158,8 +1178,8 @@ func CreateVideoMessageByURL(operationID *C.char, videoBaseInfo *C.char) *C.char
 }
 
 //export CreateVideoMessage
-func CreateVideoMessage(operationID *C.char, videoPath *C.char, videoType *C.char, duration *C.int64_t, snapshotPath *C.char) *C.char {
-	return C.CString(open_im_sdk.CreateVideoMessage(C.GoString(operationID), C.GoString(videoPath), C.GoString(videoType), int64(*duration), C.GoString(snapshotPath)))
+func CreateVideoMessage(operationID *C.char, videoPath *C.char, videoType *C.char, duration C.int64_t, snapshotPath *C.char) *C.char {
+	return C.CString(open_im_sdk.CreateVideoMessage(C.GoString(operationID), C.GoString(videoPath), C.GoString(videoType), int64(duration), C.GoString(snapshotPath)))
 }
 
 //export CreateFileMessageByURL
@@ -1178,8 +1198,8 @@ func CreateMergerMessage(operationID *C.char, mergerElemList *C.char, title *C.c
 }
 
 //export CreateFaceMessage
-func CreateFaceMessage(operationID *C.char, index *C.int, data *C.char) *C.char {
-	return C.CString(open_im_sdk.CreateFaceMessage(C.GoString(operationID), int(*index), C.GoString(data)))
+func CreateFaceMessage(operationID *C.char, index C.int, data *C.char) *C.char {
+	return C.CString(open_im_sdk.CreateFaceMessage(C.GoString(operationID), int(index), C.GoString(data)))
 }
 
 //export CreateForwardMessage
@@ -1466,8 +1486,8 @@ func SearchLocalMessages(operationID *C.char, searchParam *C.char) {
 }
 
 //export GetConversationIDBySessionType
-func GetConversationIDBySessionType(sourceID *C.char, sessionType *C.int) *C.char {
-	return C.CString(open_im_sdk.GetConversationIDBySessionType(C.GoString(sourceID), int(*sessionType)))
+func GetConversationIDBySessionType(sourceID *C.char, sessionType C.int) *C.char {
+	return C.CString(open_im_sdk.GetConversationIDBySessionType(C.GoString(sourceID), int(sessionType)))
 }
 
 //export GetAtAllTag
@@ -1526,13 +1546,13 @@ func GetMessageListSomeReactionExtensions(operationID *C.char, messageList *C.ch
 }
 
 //export SetTypeKeyInfo
-func SetTypeKeyInfo(operationID *C.char, message *C.char, typeKey *C.char, ex *C.char, isCanRepeat *C.bool) {
+func SetTypeKeyInfo(operationID *C.char, message *C.char, typeKey *C.char, ex *C.char, isCanRepeat C.bool) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "SetTypeKeyInfo",
 	}
-	open_im_sdk.SetTypeKeyInfo(callBack, id, C.GoString(message), C.GoString(typeKey), C.GoString(ex), bool(*isCanRepeat))
+	open_im_sdk.SetTypeKeyInfo(callBack, id, C.GoString(message), C.GoString(typeKey), C.GoString(ex), bool(isCanRepeat))
 }
 
 //export GetTypeKeyListInfo
@@ -1636,23 +1656,23 @@ func SignalingGetTokenByRoomID(operationID *C.char, groupID *C.char) {
 }
 
 //export GetSubDepartment
-func GetSubDepartment(operationID *C.char, departmentID *C.char, offset *C.int, size *C.int) {
+func GetSubDepartment(operationID *C.char, departmentID *C.char, offset C.int, size C.int) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "GetSubDepartment",
 	}
-	open_im_sdk.GetSubDepartment(callBack, id, C.GoString(departmentID), int(*offset), int(*size))
+	open_im_sdk.GetSubDepartment(callBack, id, C.GoString(departmentID), int(offset), int(size))
 }
 
 //export GetDepartmentMember
-func GetDepartmentMember(operationID *C.char, departmentID *C.char, offset *C.int, size *C.int) {
+func GetDepartmentMember(operationID *C.char, departmentID *C.char, offset C.int, size C.int) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "GetDepartmentMember",
 	}
-	open_im_sdk.GetDepartmentMember(callBack, id, C.GoString(departmentID), int(*offset), int(*size))
+	open_im_sdk.GetDepartmentMember(callBack, id, C.GoString(departmentID), int(offset), int(size))
 }
 
 //export GetUserInDepartment
@@ -1746,13 +1766,13 @@ func UpdateFcmToken(operationID *C.char, fmcToken *C.char) {
 }
 
 //export SetAppBadge
-func SetAppBadge(operationID *C.char, appUnreadCount *C.int32_t) {
+func SetAppBadge(operationID *C.char, appUnreadCount C.int32_t) {
 	id := C.GoString(operationID)
 	callBack := &BaseListener{
 		operationID: id,
 		methodName:  "SetAppBadge",
 	}
-	open_im_sdk.SetAppBadge(callBack, id, int32(*appUnreadCount))
+	open_im_sdk.SetAppBadge(callBack, id, int32(appUnreadCount))
 }
 
 func main() {}
