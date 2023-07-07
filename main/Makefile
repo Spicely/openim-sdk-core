@@ -14,7 +14,8 @@ macos_x86_64:
 
 
 macos_arm64:
-	CGO_ENABLED=1 CC=clang CXX=clang++ GOOS=darwin GOARCH=arm64 go build -buildmode=c-shared -o ../build/macos/libopenim_sdk_ffi.dylib openim_sdk_ffi.go
+	CGO_ENABLED=1 CC=clang CXX=clang++ GOOS=darwin GOARCH=arm64 go build -buildmode=c-shared -ldflags="-s -w" -o ../build/macos/libopenim_sdk_ffi.dylib openim_sdk_ffi.go
+	install_name_tool -id @rpath/libopenim_sdk_ffi.dylib ../build/macos/libopenim_sdk_ffi.dylib
 
 ios:
 	export CFLAGS="-arch arm64 -miphoneos-version-min=9.0 -isysroot "$(xcrun -sdk iphoneos --show-sdk-path) 
@@ -26,5 +27,5 @@ iphonesimulator:
 	export CGO_LDFLAGS="-arch x86_64 -miphoneos-version-min=9.0 -isysroot "$(xcrun -sdk iphonesimulator --show-sdk-path) 
 	CGO_ENABLED=1 GOARCH=amd64 GOOS=darwin CC="clang $CFLAGS $CGO_LDFLAGS" go build -tags ios -tags ios -buildmode c-archive -ldflags=-w  -trimpath -v -o ../build/ios/libopenim_sdk_ffi.dylib openim_sdk_ffi.go
 	
-codesign -f -s "Apple Development: zheng tang (HS53J8AN55)" ../build/macos/libopenimSDK.dylib
+codesign -f -s "Apple Development: zheng tang (HS 53J 8AN55)" ../build/macos/libopenimSDK.dylib
 xcrun -sdk iphoneos clang -arch armv7 -fpic -shared -Wl,-all_load libopenim_sdk_ffi.dylib -framework Corefoundation -o libopenim_sdk_ffi.dylib
