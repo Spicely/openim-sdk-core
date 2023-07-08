@@ -27,7 +27,8 @@ ios:
 	rm -rf ../build/ios/libopenim_sdk_ffi_arm64.dylib  ../build/ios/libopenim_sdk_ffi_arm64.h ../build/ios/libopenim_sdk_ffi_x86.dylib  ../build/ios/libopenim_sdk_ffi_x86.h
 	install_name_tool -id @rpath/libopenim_sdk_ffi.dylib ../build/ios/libopenim_sdk_ffi.dylib
 
-	
+linux:
+	go build -tags linux -ldflags=-w -trimpath -v -o "../build/linux/libopenim_sdk_ffi.so" -buildmode c-shared openim_sdk_ffi.go
 	
 codesign -f -s "Apple Development: zheng tang (HS 53J 8AN55)" ../build/macos/libopenimSDK.dylib
 xcrun -sdk iphoneos clang -arch armv7 -fpic -shared -Wl,-all_load libopenim_sdk_ffi.dylib -framework Corefoundation -o libopenim_sdk_ffi.dylib
