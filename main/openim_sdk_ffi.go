@@ -5,10 +5,10 @@ package main
 #include "include/dart_api_dl.h"
 
 typedef struct {
-    void (*onMethodChannel)(Dart_Port_DL port, const char*, const char*, const char*, double*, const char*);
+    void (*onMethodChannel)(Dart_Port_DL port, char*, char*, char*, double*, char*);
 } CGO_OpenIM_Listener;
 
-static void callOnMethodChannel(CGO_OpenIM_Listener *listener, Dart_Port_DL port, const char* methodName, const char* operationID,const char* callMethodName, double* errCode, const char* message) {
+static void callOnMethodChannel(CGO_OpenIM_Listener *listener, Dart_Port_DL port, char* methodName, char* operationID, char* callMethodName, double* errCode, char* message) {
     listener->onMethodChannel(port, methodName, operationID, callMethodName, errCode, message);
 }
 */
