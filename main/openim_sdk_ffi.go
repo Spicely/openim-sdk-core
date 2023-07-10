@@ -6,10 +6,14 @@ package main
 
 typedef struct {
     void (*onMethodChannel)(Dart_Port_DL port, char*, char*, char*, double*, char*);
+	void (*onNativeMethodChannel)(char*, char*, char*, double*, char*);
 } CGO_OpenIM_Listener;
 
 static void callOnMethodChannel(CGO_OpenIM_Listener *listener, Dart_Port_DL port, char* methodName, char* operationID, char* callMethodName, double* errCode, char* message) {
     listener->onMethodChannel(port, methodName, operationID, callMethodName, errCode, message);
+}
+static void callOnNativeMethodChannel(CGO_OpenIM_Listener *listener, char* methodName, char* operationID, char* callMethodName, double* errCode, char* message) {
+    listener->onNativeMethodChannel(methodName, operationID, callMethodName, errCode, message);
 }
 */
 import "C"
@@ -21,11 +25,36 @@ var openIMListener *C.CGO_OpenIM_Listener
 
 var main_isolate_send_port C.Dart_Port_DL
 
+var isListenerInit = false
+var initFFI = false
+var initNative = false
+
 //export RegisterCallback
 func RegisterCallback(callback *C.CGO_OpenIM_Listener, port C.Dart_Port_DL) {
+	if initFFI {
+		return
+	}
+	initFFI = true
 	openIMListener = callback
 	main_isolate_send_port = port
+	initListener()
+}
 
+//export NativeRegisterCallback
+func NativeRegisterCallback(callback *C.CGO_OpenIM_Listener) {
+	if initNative {
+		return
+	}
+	initNative = true
+	openIMListener = callback
+	initListener()
+}
+
+func initListener() {
+	if isListenerInit {
+		return
+	}
+	isListenerInit = true
 	conversationListener := &ConversationListener{}
 	open_im_sdk.SetConversationListener(conversationListener)
 
@@ -90,8 +119,13 @@ func callBack(methodName string, operationID interface{}, callMethodName interfa
 	if message != nil {
 		cMessage = C.CString(message.(string))
 	}
+	if initFFI {
+		C.callOnMethodChannel(openIMListener, main_isolate_send_port, cMethodName, cOperationID, cCallMethodName, cErrCode, cMessage)
+	}
+	if initNative {
+		C.callOnNativeMethodChannel(openIMListener, cMethodName, cOperationID, cCallMethodName, cErrCode, cMessage)
+	}
 
-	C.callOnMethodChannel(openIMListener, main_isolate_send_port, cMethodName, cOperationID, cCallMethodName, cErrCode, cMessage)
 }
 
 type ListenerForService struct{}
