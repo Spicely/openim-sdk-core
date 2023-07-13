@@ -28,6 +28,7 @@ var main_isolate_send_port C.Dart_Port_DL
 var isListenerInit = false
 var initFFI = false
 var initNative = false
+var initSDK = false
 
 //export RegisterCallback
 func RegisterCallback(callback *C.CGO_OpenIM_Listener, port C.Dart_Port_DL) {
@@ -224,15 +225,15 @@ func (a AdvancedMsgListener) OnNewRecvMessageRevoked(messageRevoked string) {
 }
 
 func (a AdvancedMsgListener) OnRecvMessageExtensionsChanged(msgID string, reactionExtensionList string) {
-	callBack("OnRecvMessageExtensionsChanged", nil, nil, nil, reactionExtensionList)
+	callBack("OnRecvMessageExtensionsChanged", msgID, nil, nil, reactionExtensionList)
 }
 
 func (a AdvancedMsgListener) OnRecvMessageExtensionsDeleted(msgID string, reactionExtensionKeyList string) {
-	callBack("OnRecvMessageExtensionsDeleted", nil, nil, nil, reactionExtensionKeyList)
+	callBack("OnRecvMessageExtensionsDeleted", msgID, nil, nil, reactionExtensionKeyList)
 }
 
 func (a AdvancedMsgListener) OnRecvMessageExtensionsAdded(msgID string, reactionExtensionList string) {
-	callBack("OnRecvMessageExtensionsAdded", nil, nil, nil, reactionExtensionList)
+	callBack("OnRecvMessageExtensionsAdded", msgID, nil, nil, reactionExtensionList)
 }
 
 func (a AdvancedMsgListener) OnRecvOfflineNewMessages(messageList string) {
@@ -418,6 +419,10 @@ func GetSdkVersion() *C.char {
 
 //export InitSDK
 func InitSDK(operationID *C.char, config *C.char) C.bool {
+	if initSDK {
+		return true
+	}
+	initSDK = true
 	listener := &OnConnListener{}
 	return C.bool(open_im_sdk.InitSDK(listener, C.GoString(operationID), C.GoString(config)))
 }
