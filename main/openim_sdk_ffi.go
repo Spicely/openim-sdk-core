@@ -10,10 +10,14 @@ typedef struct {
 } CGO_OpenIM_Listener;
 
 static void callOnMethodChannel(CGO_OpenIM_Listener *listener, Dart_Port_DL port, char* methodName, char* operationID, char* callMethodName, double* errCode, char* message) {
-    listener->onMethodChannel(port, methodName, operationID, callMethodName, errCode, message);
+	if (&listener->onMethodChannel != NULL) {
+		listener->onMethodChannel(port, methodName, operationID, callMethodName, errCode, message);
+	}
 }
 static void callOnNativeMethodChannel(CGO_OpenIM_Listener *listener, char* methodName, char* operationID, char* callMethodName, double* errCode, char* message) {
-    listener->onNativeMethodChannel(methodName, operationID, callMethodName, errCode, message);
+	if (&listener->onNativeMethodChannel != NULL) {
+		listener->onNativeMethodChannel(methodName, operationID, callMethodName, errCode, message);
+	}
 }
 */
 import "C"
@@ -26,28 +30,12 @@ var openIMListener *C.CGO_OpenIM_Listener
 var main_isolate_send_port C.Dart_Port_DL
 
 var isListenerInit = false
-var initFFI = false
-var initNative = false
 var initSDK = false
 
 //export RegisterCallback
 func RegisterCallback(callback *C.CGO_OpenIM_Listener, port C.Dart_Port_DL) {
-	if initFFI {
-		return
-	}
-	initFFI = true
 	openIMListener = callback
 	main_isolate_send_port = port
-	initListener()
-}
-
-//export NativeRegisterCallback
-func NativeRegisterCallback(callback *C.CGO_OpenIM_Listener) {
-	if initNative {
-		return
-	}
-	initNative = true
-	openIMListener = callback
 	initListener()
 }
 
@@ -120,12 +108,8 @@ func callBack(methodName string, operationID interface{}, callMethodName interfa
 	if message != nil {
 		cMessage = C.CString(message.(string))
 	}
-	if initFFI {
-		C.callOnMethodChannel(openIMListener, main_isolate_send_port, cMethodName, cOperationID, cCallMethodName, cErrCode, cMessage)
-	}
-	if initNative {
-		C.callOnNativeMethodChannel(openIMListener, cMethodName, cOperationID, cCallMethodName, cErrCode, cMessage)
-	}
+	C.callOnMethodChannel(openIMListener, main_isolate_send_port, cMethodName, cOperationID, cCallMethodName, cErrCode, cMessage)
+	C.callOnNativeMethodChannel(openIMListener, cMethodName, cOperationID, cCallMethodName, cErrCode, cMessage)
 
 }
 
