@@ -17,6 +17,13 @@ macos:
 	install_name_tool -id @rpath/libopenim_sdk_ffi.dylib ../build/macos/libopenim_sdk_ffi.dylib
 
 ios:
+	export CFLAGS="-arch arm64 -miphoneos-version-min=9.0 -isysroot "$(xcrun -sdk iphoneos --show-sdk-path) 
+	export CGO_LDFLAGS="-arch arm64 -miphoneos-version-min=9.0 -isysroot "$(xcrun -sdk iphoneos --show-sdk-path)  
+	CGO_ENABLED=1 GOARCH=arm64 GOOS=ios CC="clang $CFLAGS $CGO_LDFLAGS" go build -tags ios -ldflags "-s -w" -trimpath -v -o ../build/ios/libopenim_sdk_ffi.a -buildmode c-archive openim_sdk_ffi.go
+	xcrun -sdk iphoneos clang -arch arm64 -fpic -shared -Wl,-all_load ../build/ios/libopenim_sdk_ffi.a -framework CoreFoundation -framework Security -lresolv -o ../build/ios/libopenim_sdk_ffi.dylib
+	install_name_tool -id @rpath/libopenim_sdk_ffi.dylib ../build/ios/libopenim_sdk_ffi.dylib
+
+
 	export CFLAGS="-arch arm64 -miphoneos-version-min=9.0 -isysroot $(xcrun -sdk iphoneos --show-sdk-path)"
 	export CGO_LDFLAGS="-arch arm64 -miphoneos-version-min=9.0 -isysroot $(xcrun -sdk iphoneos --show-sdk-path)"
 	CGO_ENABLED=1 GOARCH=arm64 GOOS=darwin CC="clang $CFLAGS $CGO_LDFLAGS" go build -tags ios -buildmode=c-shared -ldflags="-w -s" -trimpath -o ../build/ios/libopenim_sdk_ffi_arm64.dylib openim_sdk_ffi.go
@@ -26,6 +33,7 @@ ios:
 	lipo -create ../build/ios/libopenim_sdk_ffi_arm64.dylib ../build/ios/libopenim_sdk_ffi_x86.dylib -output ../build/ios/libopenim_sdk_ffi.dylib
 	rm -rf ../build/ios/libopenim_sdk_ffi_arm64.dylib ../build/ios/libopenim_sdk_ffi_x86.dylib  ../build/ios/libopenim_sdk_ffi_x86.h
 	install_name_tool -id @rpath/libopenim_sdk_ffi.dylib ../build/ios/libopenim_sdk_ffi.dylib
+	mv ../build/ios/libopenim_sdk_ffi.dylib ../../flutter_openim_sdk_ffi/ios/libopenim_sdk_ffi.dylib
 
 linux:
 	go build -tags linux -ldflags=-w -trimpath -v -o "../build/linux/libopenim_sdk_ffi.so" -buildmode c-shared openim_sdk_ffi.go
