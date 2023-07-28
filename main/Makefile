@@ -3,7 +3,8 @@ android:
 	GOARCH=arm64 GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/arm64-v8a/libopenim_sdk_ffi.so 
 	GOARCH=arm GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/armv7a-linux-androideabi21-clang go build -buildmode=c-shared -o ../build/libs/armeabi/libopenim_sdk_ffi.so 
 	GOARCH=386 GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/x86/libopenim_sdk_ffi.so 
-	mv ../build/libs/arm64/libopenim_sdk_ffi.h ../../flutter_openim_sdk_ffi/src/openim_sdk_ffi_android.h
+	# mv ../build/libs/arm64/libopenim_sdk_ffi.h ../../flutter_openim_sdk_ffi/src/openim_sdk_ffi_android.h
+	rm -rf ../build/libs/arm64/libopenim_sdk_ffi.h
 	rm -rf ../build/libs/arm64-v8a/libopenim_sdk_ffi.h
 	rm -rf ../build/libs/armeabi/libopenim_sdk_ffi.h
 	rm -rf ../build/libs/x86/libopenim_sdk_ffi.h
@@ -14,31 +15,22 @@ windows:
 	go build -buildmode=c-shared -o ../build/windows/openim_sdk_ffi.dll openim_sdk_ffi.go
 
 macos:
-	export CFLAGS="-mmacosx-version-min=11.0 -isysroot $(xcrun -sdk macosx --show-sdk-path)"
-	export CGO_LDFLAGS="-mmacosx-version-min=11.0 -isysroot $(xcrun -sdk macosx --show-sdk-path)"
-
-	CGO_ENABLED=1 GOARCH=arm64 GOOS=darwin CC="clang $CFLAGS $CGO_LDFLAGS" go build -tags ios -ldflags=-w -trimpath -v -o ../build/macos/libopenim_sdk_ffi_arm64.a -buildmode c-archive
+	export CFLAGS_ARM64="-mmacosx-version-min=10.9 -arch arm64 -isysroot $(xcrun -sdk macosx --show-sdk-path)"
+	export CGO_LDFLAGS_ARM64="-mmacosx-version-min=10.9 -arch arm64 -isysroot $(xcrun -sdk macosx --show-sdk-path)"
+	CGO_ENABLED=1 GOARCH=arm64 GOOS=darwin CC="clang $CFLAGS_ARM64 $CGO_LDFLAGS_ARM64" go build -tags macosx -ldflags="-s -w" -trimpath -v -o ../build/macos/libopenim_sdk_ffi_arm64.a -buildmode c-archive
 	xcrun -sdk macosx clang -arch arm64 -fpic -shared -Wl,-all_load ../build/macos/libopenim_sdk_ffi_arm64.a -framework CoreFoundation -framework Security -lresolv -o ../build/macos/libopenim_sdk_ffi_arm64.dylib
 	rm -rf ../build/macos/libopenim_sdk_ffi_arm64.a
-
-	CGO_ENABLED=1 GOARCH=amd64 GOOS=darwin CC="clang $CFLAGS $CGO_LDFLAGS" go build -tags macosx -ldflags=-w -trimpath -v -o ../build/macos/libopenim_sdk_ffi_x86_64.a -buildmode c-archive
+	export CFLAGS_X86_64="-mmacosx-version-min=10.9 -arch x86_64 -isysroot $(xcrun -sdk macosx --show-sdk-path)"
+	export CGO_LDFLAGS_X86_64="-mmacosx-version-min=10.9 -arch x86_64 -isysroot $(xcrun -sdk macosx --show-sdk-path)"
+	CGO_ENABLED=1 GOARCH=amd64 GOOS=darwin CC="clang $CFLAGS_X86_64 $CGO_LDFLAGS_X86_64" go build -tags macosx -ldflags="-s -w" -trimpath -v -o ../build/macos/libopenim_sdk_ffi_x86_64.a -buildmode c-archive
 	xcrun -sdk macosx clang -arch x86_64 -fpic -shared -Wl,-all_load ../build/macos/libopenim_sdk_ffi_x86_64.a -framework CoreFoundation -framework Security -lresolv -o ../build/macos/libopenim_sdk_ffi_x86_64.dylib
 	rm -rf ../build/macos/libopenim_sdk_ffi_x86_64.a
-
 	lipo -create ../build/macos/libopenim_sdk_ffi_arm64.dylib ../build/macos/libopenim_sdk_ffi_x86_64.dylib -output ../build/macos/libopenim_sdk_ffi.dylib
 	rm -rf ../build/macos/libopenim_sdk_ffi_arm64.dylib ../build/macos/libopenim_sdk_ffi_x86_64.dylib ../build/macos/libopenim_sdk_ffi_x86_64.h
-
 	install_name_tool -id @rpath/libopenim_sdk_ffi.dylib ../build/macos/libopenim_sdk_ffi.dylib
-
 	mv ../build/macos/libopenim_sdk_ffi.dylib ../../flutter_openim_sdk_ffi/macos/libopenim_sdk_ffi.dylib
-
-
-	# CGO_ENABLED=1 CC=clang CXX=clang++ GOOS=darwin GOARCH=arm64 go build -buildmode=c-shared -ldflags="-s -w" -o ../build/macos/libopenim_sdk_ffi_arm64.dylib openim_sdk_ffi.go
-	# CGO_ENABLED=1 CC=clang CXX=clang++ GOOS=darwin GOARCH=amd64 GOARM=7 go build -buildmode=c-shared -ldflags="-s -w" -o ../build/macos/libopenim_sdk_ffi_x86_64.dylib openim_sdk_ffi.go
-	# lipo -create ../build/macos/libopenim_sdk_ffi_arm64.dylib ../build/macos/libopenim_sdk_ffi_x86_64.dylib -output ../build/macos/libopenim_sdk_ffi.dylib
-	# rm -rf ../build/macos/libopenim_sdk_ffi_arm64.dylib  ../build/macos/libopenim_sdk_ffi_x86_64.dylib  ../build/macos/libopenim_sdk_ffi_x86_64.h
-	# install_name_tool -id @rpath/libopenim_sdk_ffi.dylib ../build/macos/libopenim_sdk_ffi.dylib
-	# mv ../build/macos/libopenim_sdk_ffi.dylib ../../flutter_openim_sdk_ffi/macos/libopenim_sdk_ffi.dylib
+	rm -rf ../../flutter_openim_sdk_ffi/macos/openim_sdk_ffi_apple.h
+	# mv ../build/macos/libopenim_sdk_ffi_arm64.h ../../flutter_openim_sdk_ffi/macos/openim_sdk_ffi_apple.h
 
 ios:
 	export CFLAGS="-arch arm64 -miphoneos-version-min=9.0 -isysroot "$(xcrun -sdk iphoneos --show-sdk-path) 
