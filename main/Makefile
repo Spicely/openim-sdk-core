@@ -12,7 +12,9 @@ android:
 
 windows:
 	SET CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ GOOS=windows GOARCH=amd64
-	go build -buildmode=c-shared -o ../build/windows/openim_sdk_ffi.dll openim_sdk_ffi.go
+	go build -buildmode=c-shared -o ../build/windows/openim_sdk_ffi.dll
+	mv ../build/windows/openim_sdk_ffi.h ../../flutter_openim_sdk_ffi/src/openim_sdk_ffi_windows.h
+	mv ../build/windows/openim_sdk_ffi.dll ../../flutter_openim_sdk_ffi/windows/openim_sdk_ffi.dll
 
 macos:
 	export CFLAGS_ARM64="-mmacosx-version-min=10.9 -arch arm64 -isysroot $(xcrun -sdk macosx --show-sdk-path)"
