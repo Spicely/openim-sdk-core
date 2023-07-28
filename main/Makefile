@@ -31,8 +31,7 @@ macos:
 	rm -rf ../build/macos/libopenim_sdk_ffi_arm64.dylib ../build/macos/libopenim_sdk_ffi_x86_64.dylib ../build/macos/libopenim_sdk_ffi_x86_64.h
 	install_name_tool -id @rpath/libopenim_sdk_ffi.dylib ../build/macos/libopenim_sdk_ffi.dylib
 	mv ../build/macos/libopenim_sdk_ffi.dylib ../../flutter_openim_sdk_ffi/macos/libopenim_sdk_ffi.dylib
-	rm -rf ../../flutter_openim_sdk_ffi/macos/openim_sdk_ffi_apple.h
-	# mv ../build/macos/libopenim_sdk_ffi_arm64.h ../../flutter_openim_sdk_ffi/macos/openim_sdk_ffi_apple.h
+	mv ../build/macos/libopenim_sdk_ffi_arm64.h ../../flutter_openim_sdk_ffi/macos/openim_sdk_ffi_apple.h
 
 ios:
 	export CFLAGS="-arch arm64 -miphoneos-version-min=9.0 -isysroot "$(xcrun -sdk iphoneos --show-sdk-path) 
@@ -54,7 +53,7 @@ ios:
 	mv ../build/ios/libopenim_sdk_ffi.dylib ../../flutter_openim_sdk_ffi/ios/libopenim_sdk_ffi.dylib
 
 linux:
-	go build -tags linux -ldflags=-w -trimpath -v -o "../build/linux/libopenim_sdk_ffi.so" -buildmode c-shared openim_sdk_ffi.go
+	go build -tags linux -ldflags=-w -trimpath -v -o "../build/linux/libopenim_sdk_ffi.so" -buildmode c-shared
 	
 codesign -f -s "Apple Development: zheng tang (HS 53J 8AN55)" ../build/macos/libopenimSDK.dylib
 xcrun -sdk iphoneos clang -arch armv7 -fpic -shared -Wl,-all_load libopenim_sdk_ffi.dylib -framework Corefoundation -o libopenim_sdk_ffi.dylib
