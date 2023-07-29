@@ -17,7 +17,6 @@ package test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/OpenIMSDK/Open-IM-Server/pkg/proto/sdkws"
 	X "log"
 	"open_im_sdk/internal/login"
 	"open_im_sdk/open_im_sdk"
@@ -30,7 +29,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/OpenIMSDK/Open-IM-Server/pkg/common/mcontext"
+	"github.com/OpenIMSDK/protocol/sdkws"
+
+	"github.com/OpenIMSDK/tools/mcontext"
 )
 
 var loggerf *X.Logger
@@ -104,7 +105,7 @@ type testGetUsersInfo struct {
 func DoTestGetUsersInfo() {
 	var test testGetUsersInfo
 	test.OperationID = utils.OperationIDGenerator()
-	userIDList := []string{"openIM2222"}
+	userIDList := []string{"4950399653"}
 	list := utils.StructToJsonStringDefault(userIDList)
 	fmt.Println("testGetUsersInfo, input: ", list)
 	open_im_sdk.GetUsersInfo(test, test.OperationID, list)
