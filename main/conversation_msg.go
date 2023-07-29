@@ -392,6 +392,26 @@ func FindMessageList(operationID *C.char, findMessageOptions *C.char) {
 	open_im_sdk.FindMessageList(callBack, id, C.GoString(findMessageOptions))
 }
 
+//export GetAdvancedHistoryMessageList
+func GetAdvancedHistoryMessageList(operationID *C.char, getMessageOptions *C.char) {
+	id := C.GoString(operationID)
+	callBack := &BaseListener{
+		operationID: id,
+		methodName:  "GetAdvancedHistoryMessageList",
+	}
+	open_im_sdk.GetAdvancedHistoryMessageList(callBack, id, C.GoString(getMessageOptions))
+}
+
+//export GetAdvancedHistoryMessageListReverse
+func GetAdvancedHistoryMessageListReverse(operationID *C.char, getMessageOptions *C.char) {
+	id := C.GoString(operationID)
+	callBack := &BaseListener{
+		operationID: id,
+		methodName:  "GetAdvancedHistoryMessageListReverse",
+	}
+	open_im_sdk.GetAdvancedHistoryMessageListReverse(callBack, id, C.GoString(getMessageOptions))
+}
+
 //export RevokeMessage
 func RevokeMessage(operationID *C.char, conversationID *C.char, clientMsgID *C.char) {
 	id := C.GoString(operationID)
@@ -412,8 +432,6 @@ func TypingStatusUpdate(operationID *C.char, recvID *C.char, msgTip *C.char) {
 	open_im_sdk.TypingStatusUpdate(callBack, id, C.GoString(recvID), C.GoString(msgTip))
 }
 
-// mark as read
-//
 //export MarkConversationMessageAsRead
 func MarkConversationMessageAsRead(operationID *C.char, conversationID *C.char) {
 	id := C.GoString(operationID)

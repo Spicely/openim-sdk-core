@@ -54,8 +54,8 @@ func initListener() {
 	advancedMsgListener := &AdvancedMsgListener{}
 	open_im_sdk.SetAdvancedMsgListener(advancedMsgListener)
 
-	batchMsgListener := &BatchMsgListener{}
-	open_im_sdk.SetBatchMsgListener(batchMsgListener)
+	// batchMsgListener := &BatchMsgListener{}
+	// open_im_sdk.SetBatchMsgListener(batchMsgListener)
 
 	userListener := &UserListener{}
 	open_im_sdk.SetUserListener(userListener)
