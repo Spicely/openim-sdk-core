@@ -1,8 +1,8 @@
 android:
-	GOARCH=arm64 GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/arm64/libopenim_sdk_ffi.so 
-	GOARCH=arm64 GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/arm64-v8a/libopenim_sdk_ffi.so 
-	GOARCH=arm GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/armv7a-linux-androideabi21-clang go build -buildmode=c-shared -o ../build/libs/armeabi/libopenim_sdk_ffi.so 
-	GOARCH=386 GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/x86/libopenim_sdk_ffi.so 
+	GOARCH=arm64 GOOS=android CGO_ENABLED=1 CC=/Users/Spicely/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/arm64/libopenim_sdk_ffi.so 
+	GOARCH=arm64 GOOS=android CGO_ENABLED=1 CC=/Users/Spicely/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/arm64-v8a/libopenim_sdk_ffi.so 
+	GOARCH=arm GOOS=android CGO_ENABLED=1 CC=/Users/Spicely/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/armv7a-linux-androideabi21-clang go build -buildmode=c-shared -o ../build/libs/armeabi/libopenim_sdk_ffi.so 
+	GOARCH=386 GOOS=android CGO_ENABLED=1 CC=/Users/Spicely/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/x86/libopenim_sdk_ffi.so 
 	# mv ../build/libs/arm64/libopenim_sdk_ffi.h ../../flutter_openim_sdk_ffi/src/openim_sdk_ffi_android.h
 	rm -rf ../build/libs/arm64/libopenim_sdk_ffi.h
 	rm -rf ../build/libs/arm64-v8a/libopenim_sdk_ffi.h
