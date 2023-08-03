@@ -14,7 +14,7 @@ type UploadFileCallback struct {
 func (u *UploadFileCallback) Open(size int64) {
 	data := map[string]int64{"size": size}
 	jsonData, _ := json.Marshal(data)
-	callBack("Open", u.operationID, u.methodName, nil, jsonData)
+	callBack("Open", u.operationID, u.methodName, nil, string(jsonData))
 }
 
 func (u *UploadFileCallback) PartSize(partSize int64, num int) {
@@ -23,7 +23,7 @@ func (u *UploadFileCallback) PartSize(partSize int64, num int) {
 		"num":      num,
 	}
 	jsonData, _ := json.Marshal(data)
-	callBack("PartSize", u.operationID, u.methodName, nil, jsonData)
+	callBack("PartSize", u.operationID, u.methodName, nil, string(jsonData))
 }
 
 func (u *UploadFileCallback) HashPartProgress(index int, size int64, partHash string) {
@@ -33,7 +33,7 @@ func (u *UploadFileCallback) HashPartProgress(index int, size int64, partHash st
 		"partHash": partHash,
 	}
 	jsonData, _ := json.Marshal(data)
-	callBack("HashPartProgress", u.operationID, u.methodName, nil, jsonData)
+	callBack("HashPartProgress", u.operationID, u.methodName, nil, string(jsonData))
 }
 
 func (u *UploadFileCallback) HashPartComplete(partsHash string, fileHash string) {
@@ -42,7 +42,7 @@ func (u *UploadFileCallback) HashPartComplete(partsHash string, fileHash string)
 		"partsHash": partsHash,
 	}
 	jsonData, _ := json.Marshal(data)
-	callBack("HashPartComplete", u.operationID, u.methodName, nil, jsonData)
+	callBack("HashPartComplete", u.operationID, u.methodName, nil, string(jsonData))
 }
 
 func (u *UploadFileCallback) UploadID(uploadID string) {
@@ -56,7 +56,7 @@ func (u *UploadFileCallback) UploadPartComplete(index int, partSize int64, partH
 		"partHash": partHash,
 	}
 	jsonData, _ := json.Marshal(data)
-	callBack("UploadPartComplete", u.operationID, u.methodName, nil, jsonData)
+	callBack("UploadPartComplete", u.operationID, u.methodName, nil, string(jsonData))
 }
 
 func (u *UploadFileCallback) UploadComplete(fileSize int64, streamSize int64, storageSize int64) {
@@ -66,7 +66,7 @@ func (u *UploadFileCallback) UploadComplete(fileSize int64, streamSize int64, st
 		"storageSize": storageSize,
 	}
 	jsonData, _ := json.Marshal(data)
-	callBack("UploadComplete", u.operationID, u.methodName, nil, jsonData)
+	callBack("UploadComplete", u.operationID, u.methodName, nil, string(jsonData))
 }
 
 func (u *UploadFileCallback) Complete(size int64, url string, typ int) {
@@ -76,8 +76,7 @@ func (u *UploadFileCallback) Complete(size int64, url string, typ int) {
 		"typ":  typ,
 	}
 	jsonData, _ := json.Marshal(data)
-	callBack("Complete", u.operationID, u.methodName, nil, jsonData)
-
+	callBack("Complete", u.operationID, u.methodName, nil, string(jsonData))
 }
 
 //export UploadFile
@@ -89,7 +88,7 @@ func UploadFile(operationID *C.char, req *C.char) {
 	}
 	uploadFileCallback := &UploadFileCallback{
 		operationID: id,
-		methodName:  "UploadFile",
+		methodName:  "UploadFileCallback",
 	}
 	open_im_sdk.UploadFile(callBack, id, C.GoString(req), uploadFileCallback)
 }
