@@ -22,6 +22,7 @@ import (
 	"open_im_sdk/pkg/db/model_struct"
 	"open_im_sdk/pkg/utils"
 	"open_im_sdk/sdk_struct"
+	"time"
 
 	"github.com/OpenIMSDK/protocol/sdkws"
 	"github.com/OpenIMSDK/tools/log"
@@ -631,21 +632,18 @@ func (c *Conversation) doNotificationNew(c2v common.Cmd2Value) {
 	ctx := c2v.Ctx
 	allMsg := c2v.Value.(sdk_struct.CmdNewMsgComeToConversation).Msgs
 	syncFlag := c2v.Value.(sdk_struct.CmdNewMsgComeToConversation).SyncFlag
-	// if c.msgListener == nil || c.ConversationListener == nil {
-	//	for _, v := range allMsg {
-	//		if v.ContentType > constant.SignalingNotificationBegin && v.ContentType < constant.SignalingNotificationEnd {
-	//			c.signaling.DoNotification(ctx, v, c.GetCh())
-	//		}
-	//	}
-	//	return
-	// }
 	switch syncFlag {
 	case constant.MsgSyncBegin:
+		c.startTime = time.Now()
 		c.ConversationListener.OnSyncServerStart()
 		if err := c.SyncConversationHashReadSeqs(ctx); err != nil {
 			log.ZError(ctx, "SyncConversationHashReadSeqs err", err)
 		}
-
+		//clear SubscriptionStatusMap
+		c.cache.SubscriptionStatusMap.Range(func(key, value interface{}) bool {
+			c.cache.SubscriptionStatusMap.Delete(key)
+			return true
+		})
 		for _, syncFunc := range []func(c context.Context) error{
 			c.user.SyncLoginUserInfo,
 			c.friend.SyncAllBlackList, c.friend.SyncAllFriendList, c.friend.SyncAllFriendApplication, c.friend.SyncAllSelfFriendApplication,
@@ -658,6 +656,7 @@ func (c *Conversation) doNotificationNew(c2v common.Cmd2Value) {
 	case constant.MsgSyncFailed:
 		c.ConversationListener.OnSyncServerFailed()
 	case constant.MsgSyncEnd:
+		log.ZDebug(ctx, "MsgSyncEnd", "time", time.Since(c.startTime).Milliseconds())
 		defer c.ConversationListener.OnSyncServerFinish()
 		go c.SyncAllConversations(ctx)
 	}
@@ -704,7 +703,7 @@ func (c *Conversation) doNotificationNew(c2v common.Cmd2Value) {
 				if v.ContentType > constant.FriendNotificationBegin && v.ContentType < constant.FriendNotificationEnd {
 					c.friend.DoNotification(ctx, v)
 				} else if v.ContentType > constant.UserNotificationBegin && v.ContentType < constant.UserNotificationEnd {
-					c.user.DoNotification(ctx, v)
+					c.user.DoNotification(ctx, v, c.cache.UpdateStatus)
 				} else if utils2.Contain(v.ContentType, constant.GroupApplicationRejectedNotification, constant.GroupApplicationAcceptedNotification, constant.JoinGroupApplicationNotification) {
 					c.group.DoNotification(ctx, v)
 				} else if v.ContentType > constant.SignalingNotificationBegin && v.ContentType < constant.SignalingNotificationEnd {

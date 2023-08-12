@@ -55,7 +55,8 @@ const (
 )
 
 const (
-	Closed = iota + 1
+	DefaultNotConnect = iota
+	Closed            = iota + 1
 	Connecting
 	Connected
 )
@@ -241,7 +242,8 @@ func (c *LongConnMgr) writePump(ctx context.Context) {
 				c.closedErr = ErrChanClosed
 				return
 			}
-			log.ZDebug(c.ctx, "writePump recv message", "message", message.Message)
+			log.ZDebug(c.ctx, "writePump recv message", "reqIdentifier", message.Message.ReqIdentifier,
+				"operationID", message.Message.OperationID, "sendID", message.Message.SendID)
 			resp, err := c.sendAndWaitResp(&message.Message)
 			if err != nil {
 				resp = &GeneralWsResp{
@@ -348,7 +350,7 @@ func (c *LongConnMgr) sendAndWaitResp(msg *GeneralWsReq) (*GeneralWsResp, error)
 		select {
 		case resp := <-tempChan:
 			return resp, nil
-		case <-time.After(time.Second * 3):
+		case <-time.After(time.Second * 5):
 			return nil, sdkerrs.ErrNetworkTimeOut
 		}
 
@@ -383,7 +385,7 @@ func (c *LongConnMgr) writeBinaryMsg(req GeneralWsReq) error {
 	if err != nil {
 		return err
 	}
-	if c.GetConnectionStatus() == Closed {
+	if c.GetConnectionStatus() != Connected {
 		return sdkerrs.ErrNetwork.Wrap("connection closed,re conning...")
 	}
 	_ = c.conn.SetWriteDeadline(writeWait)
@@ -400,13 +402,12 @@ func (c *LongConnMgr) writeBinaryMsg(req GeneralWsReq) error {
 func (c *LongConnMgr) close() error {
 	c.w.Lock()
 	defer c.w.Unlock()
-	if c.connStatus == Closed || c.connStatus == Connecting {
+	if c.connStatus == Closed || c.connStatus == Connecting || c.connStatus == DefaultNotConnect {
 		return nil
 	}
 	c.connStatus = Closed
 	log.ZWarn(c.ctx, "conn closed", c.closedErr)
 	return c.conn.Close()
-
 }
 
 func (c *LongConnMgr) handleMessage(message []byte) error {
@@ -452,7 +453,8 @@ func (c *LongConnMgr) handleMessage(message []byte) error {
 		fallthrough
 	case constant.SetBackgroundStatus:
 		if err := c.Syncer.NotifyResp(ctx, wsResp); err != nil {
-			log.ZError(ctx, "notifyResp failed", err, "wsResp", wsResp)
+			log.ZError(ctx, "notifyResp failed", err, "reqIdentifier", wsResp.ReqIdentifier, "errCode",
+				wsResp.ErrCode, "errMsg", wsResp.ErrMsg, "msgIncr", wsResp.MsgIncr, "operationID", wsResp.OperationID)
 		}
 	default:
 		// log.Error(wsResp.OperationID, "type failed, ", wsResp.ReqIdentifier)

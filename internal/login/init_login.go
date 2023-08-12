@@ -16,6 +16,7 @@ package login
 
 import (
 	"context"
+	"fmt"
 	"open_im_sdk/internal/business"
 	"open_im_sdk/internal/cache"
 	conv "open_im_sdk/internal/conversation_msg"
@@ -262,12 +263,13 @@ func (u *LoginMgr) login(ctx context.Context, userID, token string) error {
 	u.token = token
 	u.loginUserID = userID
 	var err error
-	u.db, err = db.NewDataBase(ctx, userID, u.info.DataDir)
+	u.db, err = db.NewDataBase(ctx, userID, u.info.DataDir, int(u.info.LogLevel))
 	if err != nil {
 		return sdkerrs.ErrSdkInternal.Wrap("init database " + err.Error())
 	}
 	log.ZDebug(ctx, "NewDataBase ok", "userID", userID, "dataDir", u.info.DataDir, "login cost time", time.Since(t1))
 	u.loginTime = time.Now().UnixNano() / 1e6
+	u.cache = cache.NewCache(u.user, u.friend)
 	u.user = user.NewUser(u.db, u.loginUserID, u.conversationCh)
 	u.user.SetListener(u.userListener)
 	u.file = file.NewFile(u.db, u.loginUserID)
@@ -276,7 +278,6 @@ func (u *LoginMgr) login(ctx context.Context, userID, token string) error {
 	u.friend.SetLoginTime(u.loginTime)
 	u.group = group.NewGroup(u.loginUserID, u.db, u.conversationCh)
 	u.group.SetGroupListener(u.groupListener)
-	u.cache = cache.NewCache(u.user, u.friend)
 	u.full = full.NewFull(u.user, u.friend, u.group, u.conversationCh, u.cache, u.db, u.conversationListener)
 	u.business = business.NewBusiness(u.db)
 	if u.businessListener != nil {
@@ -352,6 +353,15 @@ func (u *LoginMgr) initResources() {
 	u.loginMgrCh = make(chan common.Cmd2Value)
 	u.setLoginStatus(Logout)
 	u.longConnMgr = interaction.NewLongConnMgr(u.ctx, u.connListener, u.heartbeatCmdCh, u.pushMsgAndMaxSeqCh, u.loginMgrCh)
+}
+
+func (u *LoginMgr) UnInitSDK() {
+	if u.getLoginStatus(context.Background()) == Logged {
+		fmt.Println("sdk not logout, please logout first")
+		return
+	}
+	u.info = nil
+	u.setLoginStatus(0)
 }
 
 // token error recycle recourse, kicked not recycle
