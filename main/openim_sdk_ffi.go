@@ -159,6 +159,10 @@ func (o UserListener) OnSelfInfoUpdated(userInfo string) {
 	callBack("OnSelfInfoUpdated", nil, nil, nil, userInfo)
 }
 
+func (o UserListener) OnUserStatusChanged(statusMap string) {
+	callBack("OnUserStatusChanged", nil, nil, nil, statusMap)
+}
+
 type AdvancedMsgListener struct{}
 
 func (a AdvancedMsgListener) OnRecvNewMessage(message string) {
