@@ -1,9 +1,18 @@
 android:
-	GOARCH=arm64 GOOS=android CGO_ENABLED=1 CC=/Users/Spicely/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/arm64/libopenim_sdk_ffi.so openim_sdk_ffi.go
-	GOARCH=arm64 GOOS=android CGO_ENABLED=1 CC=/Users/Spicely/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/arm64-v8a/libopenim_sdk_ffi.so openim_sdk_ffi.go
-	GOARCH=arm GOOS=android CGO_ENABLED=1 CC=/Users/Spicely/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/armv7a-linux-androideabi21-clang go build -buildmode=c-shared -o ../build/libs/armeabi/libopenim_sdk_ffi.so openim_sdk_ffi.go
-	GOARCH=386 GOOS=android CGO_ENABLED=1 CC=/Users/Spicely/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android21-clang go build -buildmode=c-shared -o ../build/libs/x86/libopenim_sdk_ffi.so openim_sdk_ffi.go
+	GOARCH=arm64 GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang go build -buildmode=c-shared -ldflags="-s -w" -o ../build/libs/arm64/libopenim_sdk_ffi.so openim_sdk_ffi.go
+	GOARCH=arm64 GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android21-clang go build -buildmode=c-shared -ldflags="-s -w" -o ../build/libs/arm64-v8a/libopenim_sdk_ffi.so openim_sdk_ffi.go
+	GOARCH=arm GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/armv7a-linux-androideabi21-clang go build -buildmode=c-shared -ldflags="-s -w" -o ../build/libs/armeabi-v7a/libopenim_sdk_ffi.so openim_sdk_ffi.go
+	GOARCH=386 GOOS=android CGO_ENABLED=1 CC=/Users/muka/Library/Android/sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android21-clang go build -buildmode=c-shared -ldflags="-s -w"  -o ../build/libs/x86/libopenim_sdk_ffi.so openim_sdk_ffi.go
 
+	rm -rf ../build/libs/arm64/libopenim_sdk_ffi.h
+	rm -rf ../build/libs/arm64-v8a/libopenim_sdk_ffi.h
+	rm -rf ../build/libs/armeabi-v7a/libopenim_sdk_ffi.h
+	rm -rf ../build/libs/x86/libopenim_sdk_ffi.h
+	upx --android-shlib -f ../build/libs/arm64/libopenim_sdk_ffi.so
+	upx --android-shlib --force-pie -f -o ../build/libs/arm64-v8a/libopenim_sdk_ffi.so
+	upx --android-shlib --force-pie -f -o ../build/libs/armeabi-v7a/libopenim_sdk_ffi.so
+	upx --android-shlib --force-pie -f -o ../build/libs/x86/libopenim_sdk_ffi.so
+	rsync -av --delete ../build/libs /Users/muka/Desktop/www/flutter_openim_sdk_ffi/android
 
 windows:
 	SET CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ GOOS=windows GOARCH=amd64
@@ -40,3 +49,5 @@ linux:
 	
 codesign -f -s "Apple Development: zheng tang (HS 53J 8AN55)" ../build/macos/libopenimSDK.dylib
 xcrun -sdk iphoneos clang -arch armv7 -fpic -shared -Wl,-all_load libopenim_sdk_ffi.dylib -framework Corefoundation -o libopenim_sdk_ffi.dylib
+
+upx -9 ../build/libs/arm64-v8a/libopenim_sdk_ffi.so
